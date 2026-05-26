@@ -11,50 +11,42 @@
 parameter_exclusions_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    fluidRow(
-      column(
-        width = 10,
-        div(
-          style = "display: flex; gap: 8px; align-items: center;",
-          textInput(
-            ns("exclusion_reason"),
-            label = NULL,
-            placeholder = "Enter exclusion reason"
-          ),
-          actionButton(
-            ns("add_exclusion"),
-            label = "Add",
-            class = "btn btn-primary btn-sm"
-          )
-        )
+    div(
+      style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
+      textInput(
+        ns("exclusion_reason"),
+        label = NULL,
+        placeholder = "Enter exclusion reason"
       ),
-      column(
-        width = 2,
-        dropdown(
-          div(
-            style = "min-width:340px; max-width:480px;",
-            tags$h2("TLG Exclusion",
-                    style = "font-size:1.2em; margin-bottom:8px;"),
-            p("Exclude PK parameter rows from tables, listings, and graphs."),
-            tags$ul(
-              tags$li("Select rows in the table below and provide a reason."),
-              tags$li(tags$b("Yellow"), ": excluded (PPSUMFL = \"Y\" in ADPP)"),
-              tags$li(
-                "Rows excluded by flag rules are shown with PPSUMFL/PPSUMRSN",
-                "but remain in summary tables and plots."
-              ),
-              tags$li(
-                "Manually added exclusions are filtered from",
-                "summary tables and mean plots."
-              )
+      actionButton(
+        ns("add_exclusion"),
+        label = "Add",
+        class = "btn-primary btn-sm"
+      ),
+      dropdown(
+        div(
+          style = "min-width:340px; max-width:480px;",
+          tags$h2("TLG Exclusion",
+                  style = "font-size:1.2em; margin-bottom:8px;"),
+          p("Exclude PK parameter rows from tables, listings, and graphs."),
+          tags$ul(
+            tags$li("Select rows in the table below and provide a reason."),
+            tags$li(tags$b("Yellow"), ": excluded (PPSUMFL = \"Y\" in ADPP)"),
+            tags$li(
+              "Rows excluded by flag rules are shown with PPSUMFL/PPSUMRSN",
+              "but remain in summary tables and plots."
             ),
-            p("Remove manual exclusions anytime by clicking the X button.")
+            tags$li(
+              "Manually added exclusions are filtered from",
+              "summary tables and mean plots."
+            )
           ),
-          style = "unite",
-          right = TRUE,
-          icon = icon("question"),
-          status = "primary"
-        )
+          p("Remove manual exclusions anytime by clicking the X button.")
+        ),
+        style = "unite",
+        right = TRUE,
+        icon = icon("question"), `aria-label` = "Help",
+        status = "primary"
       )
     ),
     uiOutput(ns("exclusion_list_ui")),
