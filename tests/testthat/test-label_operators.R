@@ -239,4 +239,41 @@ describe("resolve_param_labels", {
     result <- resolve_param_labels(df)
     expect_null(attr(result[["UNKNOWN_PARAM"]], "label"))
   })
+
+  it("overwrites label when existing label equals column name (apply_labels fallback)", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "CMAX"
+    attr(df[["CMAX"]], "label") <- "CMAX"  # simulate apply_labels fallback
+    result <- resolve_param_labels(df)
+    expect_equal(attr(result[["CMAX"]], "label"), "Max Conc")
+  })
+
+  it("resolves dose-aware interval parameter (e.g. AUCINTda_0-24)", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "AUCINTda_0-24"
+    result <- resolve_param_labels(df)
+    expect_equal(
+      attr(result[["AUCINTda_0-24"]], "label"),
+      "AUC from 0 to 24 (dose-aware)"
+    )
+  })
+
+  it("handles multi-column data frame with mixed column types in one pass", {
+    df <- data.frame(a = 1, b = 2, c = 3, d = 4)
+    names(df) <- c("AUCINT_0-12", "CMAX", "UNKNOWN_PARAM", "AUCINT_0-24")
+    attr(df[["AUCINT_0-24"]], "label") <- "Custom"
+    result <- resolve_param_labels(df)
+    expect_equal(attr(result[["AUCINT_0-12"]], "label"), "AUC from 0 to 12")
+    expect_equal(attr(result[["CMAX"]], "label"), "Max Conc")
+    expect_null(attr(result[["UNKNOWN_PARAM"]], "label"))
+    expect_equal(attr(result[["AUCINT_0-24"]], "label"), "Custom")
+  })
+
+  it("handles empty data frame without error", {
+    df <- data.frame(x = numeric(0))
+    names(df) <- "CMAX"
+    result <- resolve_param_labels(df)
+    expect_equal(nrow(result), 0)
+    expect_equal(attr(result[["CMAX"]], "label"), "Max Conc")
+  })
 })
