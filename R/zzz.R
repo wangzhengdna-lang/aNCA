@@ -64,6 +64,7 @@
     "PKNCA",
     "PKSUM1F",
     "PKSUM1FN",
+    "PKSUM1RS",
     "PPANMETH",
     "PPORRES",
     "PPORRESU",
@@ -179,7 +180,7 @@
     "ppanmeth_test_groups",
     "predict",
     "prev_dosno",
-
+    "se",
     "single_dose_present",
     "span.ratio",
     "start",
