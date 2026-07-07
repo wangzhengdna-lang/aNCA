@@ -603,20 +603,28 @@ describe(".drop_start_end", {
   })
 
   it("drops start/end when aggregate_subject != no", {
-    expect_true(.drop_start_end("RACE", aggregate_subject = "yes",
+    expect_true(.drop_start_end(
+      "RACE", aggregate_subject = "yes",
       test_parsed = list(is_interval = FALSE),
-      ref_parsed = list(is_interval = FALSE)))
-    expect_true(.drop_start_end("ATPTREF", aggregate_subject = "yes",
+      ref_parsed = list(is_interval = FALSE)
+    ))
+    expect_true(.drop_start_end(
+      "ATPTREF", aggregate_subject = "yes",
       test_parsed = list(is_interval = FALSE),
-      ref_parsed = list(is_interval = FALSE)))
+      ref_parsed = list(is_interval = FALSE)
+    ))
   })
 
   it("drops start/end when test or ref is an interval parameter", {
-    expect_true(.drop_start_end("ATPTREF", aggregate_subject = "no",
+    expect_true(.drop_start_end(
+      "ATPTREF", aggregate_subject = "no",
       test_parsed = list(is_interval = TRUE),
-      ref_parsed = list(is_interval = FALSE)))
-    expect_true(.drop_start_end("ATPTREF", aggregate_subject = "no",
+      ref_parsed = list(is_interval = FALSE)
+    ))
+    expect_true(.drop_start_end(
+      "ATPTREF", aggregate_subject = "no",
       test_parsed = list(is_interval = FALSE),
-      ref_parsed = list(is_interval = TRUE)))
+      ref_parsed = list(is_interval = TRUE)
+    ))
   })
 })
