@@ -298,9 +298,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       "parameter_exclusions", res_nca
     )
 
-    # Store parameter exclusions so they are available for settings export (#1274)
+    # Store parameter exclusions as a reactiveVal for consumers (#1274)
+    session$userData$parameter_exclusions <- reactiveVal(NULL)
     observe({
-      session$userData$parameter_exclusions <- param_excl_rows()
+      session$userData$parameter_exclusions(param_excl_rows())
     })
 
     res_nca_excl <- reactive({

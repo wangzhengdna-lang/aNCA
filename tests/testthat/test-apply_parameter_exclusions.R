@@ -35,13 +35,24 @@ describe("apply_parameter_exclusions", {
     expect_equal(result$result$.pp_excl_reason, c("reason1", NA, NA, "reason2", NA))
   })
 
-  it("handles mismatched indices/reasons lengths gracefully", {
+  it("handles mismatched indices/reasons lengths with a warning", {
     res <- make_res(3)
     excl <- list(indices = 2L, reasons = c("a", "b"))
-    result <- apply_parameter_exclusions(res, excl)
+    expect_warning(
+      result <- apply_parameter_exclusions(res, excl),
+      "Length of exclusion indices"
+    )
     expect_equal(result$result$.pp_excl, c(FALSE, TRUE, FALSE))
-    # When lengths mismatch, reasons are not assigned (fallback to all NA)
     expect_equal(result$result$.pp_excl_reason, rep(NA_character_, 3))
+  })
+
+  it("errors on out-of-bounds indices", {
+    res <- make_res(3)
+    excl <- list(indices = 5L, reasons = "reason")
+    expect_error(
+      apply_parameter_exclusions(res, excl),
+      "Out-of-bounds"
+    )
   })
 
   it("preserves existing columns in res$result", {

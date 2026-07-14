@@ -20,10 +20,24 @@ apply_parameter_exclusions <- function(res, excl_info) {
   excl_indices <- excl_info$indices
   excl_reasons <- excl_info$reasons
 
+  # Validate indices are in bounds
+  if (any(excl_indices < 1L | excl_indices > n)) {
+    stop(
+      "Out-of-bounds exclusion indices detected. ",
+      "Indices must be between 1 and ", n, "."
+    )
+  }
+
   res$result$.pp_excl <- seq_len(n) %in% excl_indices
   reason_vec <- rep(NA_character_, n)
   if (length(excl_indices) > 0 && length(excl_indices) == length(excl_reasons)) {
     reason_vec[excl_indices] <- excl_reasons
+  } else if (length(excl_indices) != length(excl_reasons)) {
+    warning(
+      "Length of exclusion indices (", length(excl_indices),
+      ") does not match reasons (", length(excl_reasons),
+      "). Reasons will not be assigned."
+    )
   }
   res$result$.pp_excl_reason <- reason_vec
   res

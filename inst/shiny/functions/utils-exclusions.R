@@ -240,21 +240,11 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
 #' @returns List with `tagged` and `filtered` result objects.
 #' @noRd
 .apply_param_exclusions <- function(res, excl_info) {
-  excl_indices <- excl_info$indices
-  excl_reasons <- excl_info$reasons
+  # Delegate tagging to the exported function
+  res_tagged <- apply_parameter_exclusions(res, excl_info)
 
-  tagged_result <- res$result
-  n <- nrow(tagged_result)
-  tagged_result$.pp_excl <- seq_len(n) %in% excl_indices
-  reason_vec <- rep(NA_character_, n)
-  if (length(excl_indices) > 0 && length(excl_indices) == length(excl_reasons)) {
-    reason_vec[excl_indices] <- excl_reasons
-  }
-  tagged_result$.pp_excl_reason <- reason_vec
-
-  res_tagged <- res
-  res_tagged$result <- tagged_result
-
+  # Build filtered view (exclude tagged rows)
+  tagged_result <- res_tagged$result
   keep <- !tagged_result$.pp_excl
   filtered_result <- tagged_result[keep, , drop = FALSE]
   filtered_result$.pp_excl <- NULL
