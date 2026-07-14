@@ -450,14 +450,14 @@ describe("rm_impute_obs_params", {
   })
 })
 
-describe(".build_rev_deps", {
-  it("builds reverse dependency map from Depends column", {
+describe(".build_consumer_map", {
+  it("builds consumer map from Depends column", {
     metadata <- data.frame(
       PKNCA = c("half.life", "lambda.z", "aucinf.obs", "cmax"),
       Depends = c("tmax, tlast", "half.life", "lambda.z", NA),
       stringsAsFactors = FALSE
     )
-    result <- .build_rev_deps(metadata)
+    result <- .build_consumer_map(metadata)
     expect_type(result, "list")
     expect_true("lambda.z" %in% result[["half.life"]])
     expect_true("aucinf.obs" %in% result[["lambda.z"]])
@@ -470,21 +470,21 @@ describe(".build_rev_deps", {
       Depends = c("", NA),
       stringsAsFactors = FALSE
     )
-    result <- .build_rev_deps(metadata)
+    result <- .build_consumer_map(metadata)
     expect_type(result, "list")
   })
 })
 
-describe(".walk_forward_deps", {
+describe(".find_upstream_deps", {
   it("finds half.life via transitive chain: half.life -> lambda.z -> aucinf.obs", {
     metadata <- data.frame(
       PKNCA = c("half.life", "lambda.z", "aucinf.obs", "cmax", "tmax"),
       Depends = c("tmax, tlast", "half.life", "lambda.z", NA, NA),
       stringsAsFactors = FALSE
     )
-    rev_deps <- .build_rev_deps(metadata)
+    consumer_map <- .build_consumer_map(metadata)
     start_set <- c("aucinf.obs")
-    result <- .walk_forward_deps(start_set, rev_deps)
+    result <- .find_upstream_deps(start_set, consumer_map)
     expect_true("aucinf.obs" %in% result)
     expect_true("lambda.z" %in% result)
     expect_true("half.life" %in% result)
@@ -498,8 +498,8 @@ describe(".walk_forward_deps", {
       Depends = c("tmax", "half.life", "lambda.z"),
       stringsAsFactors = FALSE
     )
-    rev_deps <- .build_rev_deps(metadata)
-    result <- .walk_forward_deps(c("aucinf.obs"), rev_deps)
+    consumer_map <- .build_consumer_map(metadata)
+    result <- .find_upstream_deps(c("aucinf.obs"), consumer_map)
     expect_true("lambda.z" %in% result)
     expect_true("half.life" %in% result)
     # tmax is in default obs_params → excluded regardless of depth
@@ -522,9 +522,7 @@ describe("rm_impute_obs_params integration", {
       data$intervals[[col]] <- col %in% c("aucinf.obs", "half.life")
     }
     result <- rm_impute_obs_params(data, metadata_nca_parameters)
-    # half.life should NOT have imputation removed (it feeds aucinf.obs)
-    expect_false(
-      any(grepl("half.life", result$intervals$impute_not_for_params %||% character()))
-    )
+    # half.life should retain imputation (it feeds aucinf.obs via lambda.z)
+    expect_true("blq" %in% result$intervals$impute)
   })
 })

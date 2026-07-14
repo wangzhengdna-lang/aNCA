@@ -337,10 +337,10 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
     filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
     pull(PKNCA)
 
-  # Build reverse dependency table and walk forward along the data-flow
-  # direction to find all params whose consumers eventually reach an AUC param.
-  rev_deps <- .build_rev_deps(metadata_nca_parameters)
-  needs_impute <- .walk_forward_deps(params_auc_dep, rev_deps)
+  # Build consumer map ("who consumes X") and walk upstream from AUC params
+  # to find all parameters in their dependency chain (#1057).
+  consumer_map <- .build_consumer_map(metadata_nca_parameters)
+  needs_impute <- .find_upstream_deps(params_auc_dep, consumer_map)
 
   params_not_to_impute <- metadata_nca_parameters %>%
     filter(!PKNCA %in% needs_impute) %>%
@@ -378,11 +378,11 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
   data
 }
 
-#' Build a reverse dependency table from the Depends column.
-#' For each parameter A, returns which parameters list A as a dependency.
-#' e.g., lambda.z lists half.life in Depends, so rev_deps$half.life includes lambda.z.
+#' Build a consumer map from the Depends column.
+#' For each parameter A, returns which parameters consume A (list A as a dependency).
+#' e.g., lambda.z lists half.life in Depends, so consumer_map$half.life = "lambda.z".
 #' @noRd
-.build_rev_deps <- function(metadata) {
+.build_consumer_map <- function(metadata) {
   rev <- list()
   for (i in seq_len(nrow(metadata))) {
     pkg_name <- metadata$PKNCA[i]
@@ -396,20 +396,27 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
   rev
 }
 
-#' Walk forward through the reverse dependency table from `start_set`.
-#' At each iteration, finds params whose consumers include any param
-#' already in the set — i.e., params that feed into the current chain.
-#' Stops when reaching purely observational leaf params (cmax, tmax, tlast)
-#' to avoid including them in the imputation set.
+#' Find all upstream dependencies transitively from `start_set`.
+#' Walks the consumer map to collect params that feed into the current chain,
+#' stopping at purely observational leaf params (cmax, tmax, tlast).
+#'
+#' @param start_set Character vector of starting PKNCA parameter names.
+#' @param consumer_map Named list from `.build_consumer_map()`.
+#' @param obs_params Character vector of observational params to exclude.
+#'   Must be kept in sync with metadata_nca_parameters when new leaf params
+#'   are added. Default: cmax, tmax, tlast.
+#' @param max_iter Maximum iterations to guard against infinite loops from
+#'   circular dependencies. 50 is generous (~40 params in real metadata).
 #' @noRd
-.walk_forward_deps <- function(start_set, rev_deps,
-                                obs_params = c("cmax", "tmax", "tlast")) {
+.find_upstream_deps <- function(start_set, consumer_map,
+                                 obs_params = c("cmax", "tmax", "tlast"),
+                                 max_iter = 50L) {
   needs <- start_set
-  repeat {
+  for (iter in seq_len(max_iter)) {
     newly_found <- character()
-    for (pkg in names(rev_deps)) {
+    for (pkg in names(consumer_map)) {
       if (!pkg %in% needs && !pkg %in% obs_params &&
-          any(rev_deps[[pkg]] %in% needs)) {
+          any(consumer_map[[pkg]] %in% needs)) {
         newly_found <- c(newly_found, pkg)
       }
     }
