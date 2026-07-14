@@ -409,14 +409,14 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
 #'   circular dependencies. 50 is generous (~40 params in real metadata).
 #' @noRd
 .find_upstream_deps <- function(start_set, consumer_map,
-                                 obs_params = c("cmax", "tmax", "tlast"),
-                                 max_iter = 50L) {
+                                obs_params = c("cmax", "tmax", "tlast"),
+                                max_iter = 50L) {
   needs <- start_set
   for (iter in seq_len(max_iter)) {
     newly_found <- character()
     for (pkg in names(consumer_map)) {
       if (!pkg %in% needs && !pkg %in% obs_params &&
-          any(consumer_map[[pkg]] %in% needs)) {
+            any(consumer_map[[pkg]] %in% needs)) {
         newly_found <- c(newly_found, pkg)
       }
     }
