@@ -396,6 +396,12 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
   rev
 }
 
+#' Check if a parameter is a new upstream consumer of the current chain.
+#' @noRd
+.is_new_upstream_consumer <- function(pkg, consumer_map, needs, obs_params) {
+  !pkg %in% needs && !pkg %in% obs_params && any(consumer_map[[pkg]] %in% needs)
+}
+
 #' Find all upstream dependencies transitively from `start_set`.
 #' Walks the consumer map to collect params that feed into the current chain,
 #' stopping at purely observational leaf params (cmax, tmax, tlast).
@@ -415,8 +421,7 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
   for (iter in seq_len(max_iter)) {
     newly_found <- character()
     for (pkg in names(consumer_map)) {
-      if (!pkg %in% needs && !pkg %in% obs_params &&
-            any(consumer_map[[pkg]] %in% needs)) {
+      if (.is_new_upstream_consumer(pkg, consumer_map, needs, obs_params)) {
         newly_found <- c(newly_found, pkg)
       }
     }

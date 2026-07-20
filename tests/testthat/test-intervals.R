@@ -508,7 +508,7 @@ describe(".find_upstream_deps", {
 })
 
 describe("rm_impute_obs_params integration", {
-  it("retains imputation for half.life when aucinf.obs is requested (#1057)", {
+  it("retains imputation for half-life chain and removes it for observational params (#1057)", {
     data <- FIXTURE_PKNCA_DATA
     # Mark all intervals as having imputation
     if (!"impute" %in% names(data$intervals)) {
@@ -516,13 +516,31 @@ describe("rm_impute_obs_params integration", {
     } else {
       data$intervals$impute[is.na(data$intervals$impute)] <- "blq"
     }
-    # Request only aucinf.obs and half.life
+
+    # Request AUC-chain params and observational params
+    requested <- c("aucinf.obs", "half.life", "cmax", "tmax", "tlast")
     for (col in names(data$intervals)) {
       if (col %in% c("start", "end", "impute", "type_interval")) next
-      data$intervals[[col]] <- col %in% c("aucinf.obs", "half.life")
+      data$intervals[[col]] <- col %in% requested
     }
+
     result <- rm_impute_obs_params(data, metadata_nca_parameters)
-    # half.life should retain imputation (it feeds aucinf.obs via lambda.z)
-    expect_true("blq" %in% result$intervals$impute)
+
+    # AUC-chain params (half.life, lambda.z, aucinf.obs) should RETAIN imputation
+    auc_chain_rows <- result$intervals[
+      result$intervals[["aucinf.obs"]] |
+        result$intervals[["half.life"]] |
+        result$intervals[["lambda.z"]],
+    ]
+    expect_true("blq" %in% auc_chain_rows$impute)
+
+    # Observational params (cmax, tmax, tlast) should LOSE imputation
+    obs_rows <- result$intervals[
+      result$intervals[["cmax"]] |
+        result$intervals[["tmax"]] |
+        result$intervals[["tlast"]],
+    ]
+    expect_false("blq" %in% obs_rows$impute)
+    expect_true(all(is.na(obs_rows$impute) | obs_rows$impute == ""))
   })
 })
