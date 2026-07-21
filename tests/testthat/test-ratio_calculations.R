@@ -619,4 +619,12 @@ describe(".coerce_group_types", {
     expect_equal(result$RACE, "WHITE")
     expect_equal(result$SEX, "M")
   })
+
+  it("preserves numeric-looking character keys when data column is character (#1322)", {
+    groups <- data.frame(SITEID = "01", stringsAsFactors = FALSE)
+    data <- data.frame(SITEID = "01", USUBJID = "S1", stringsAsFactors = FALSE)
+    result <- .coerce_group_types(groups, data)
+    expect_type(result$SITEID, "character")
+    expect_equal(result$SITEID, "01")
+  })
 })

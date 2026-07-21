@@ -487,16 +487,17 @@ calculate_ratio_app <- function(
 #' @noRd
 .coerce_group_types <- function(groups, data) {
   for (col in intersect(names(groups), names(data))) {
-    groups[[col]] <- utils::type.convert(groups[[col]], as.is = TRUE)
     data_type <- class(data[[col]])[1]
+    # Leave character data columns untouched: type.convert() would mangle
+    # numeric-looking character keys (e.g. SITEID "01" -> 1 -> "1").
+    if (data_type == "character") next
+    groups[[col]] <- utils::type.convert(groups[[col]], as.is = TRUE)
     group_type <- class(groups[[col]])[1]
     if (data_type == group_type) next
     if (data_type == "factor") {
       groups[[col]] <- factor(groups[[col]], levels = levels(data[[col]]))
     } else if (data_type %in% c("numeric", "integer")) {
       groups[[col]] <- as.numeric(groups[[col]])
-    } else if (data_type == "character") {
-      groups[[col]] <- as.character(groups[[col]])
     }
   }
   groups
