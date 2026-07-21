@@ -25,6 +25,12 @@ manual_slopes_table_ui <- function(id) {
   )
 }
 
+# Delay before re-enabling edit events after a table re-render.
+# reactable.extras widgets fire spurious edit events (default dropdown/empty
+# text) while they re-initialize; 500ms reliably covers that init window so
+# those events are suppressed rather than written back into the data.
+EDIT_SUPPRESS_MS <- 500
+
 #' Manual Slopes Table Server for Slope Selection
 #'
 #' Server module for managing the manual slopes table (inclusion/exclusion rules).
@@ -90,9 +96,10 @@ manual_slopes_table_server <- function(
 
     # Set suppression on each re-render; clear after delay only if no newer re-render occurred.
     observeEvent(refresh_reactable(), {
-      gen <- suppress_edit_events(0) + 1  # increment generation (0→1, 1→2, etc.)
+      gen <- suppress_edit_events() + 1  # read current, then increment
       suppress_edit_events(gen)
-      shinyjs::delay(500, {
+      shinyjs::delay(EDIT_SUPPRESS_MS, {
+        # only clear if no newer re-render bumped the generation
         if (identical(suppress_edit_events(), gen)) {
           suppress_edit_events(0)
         }
