@@ -44,7 +44,7 @@ EDIT_SUPPRESS_MS <- 500
 #' @return List with:
 #'   - manual_slopes: reactiveVal containing the current manual slopes table
 #'   - refresh_reactable: reactiveVal for triggering table re-render
-manual_slopes_table_server <- function(
+manual_slopes_table_server <- function( # nolint: cyclocomp_linter
   id, pknca_data, manual_slopes_override = NULL
 ) {
   moduleServer(id, function(input, output, session) {

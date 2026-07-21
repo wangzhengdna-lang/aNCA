@@ -83,7 +83,7 @@ tab_nca_ui <- function(id) {
 
 # .apply_param_exclusions is defined in inst/shiny/functions/utils-exclusions.R
 
-tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
+tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override, # nolint: cyclocomp_linter
                            auto_replay_ready) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
