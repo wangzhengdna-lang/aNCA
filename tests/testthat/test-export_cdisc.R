@@ -1006,6 +1006,9 @@ describe("export_cdisc: flag columns do not leak to other outputs", {
     result <- export_cdisc(test_pknca_res)
     expect_true("ATPTREF" %in% names(result$adpp))
     expect_true("ROUTE" %in% names(result$adpp))
+    # Verify values are carried through, not just the column names
+    expect_true(any(!is.na(result$adpp$ATPTREF)))
+    expect_true(any(!is.na(result$adpp$ROUTE)))
   })
 })
 
